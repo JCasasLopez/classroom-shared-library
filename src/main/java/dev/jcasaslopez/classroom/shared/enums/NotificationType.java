@@ -58,7 +58,31 @@ public enum NotificationType {
 						"""
 						<p>%s</p>
 						"""
-				);
+				),
+		
+		BOOKING_CONFIRMED(
+				"Booking Confirmed",
+				"Informing user {} of confirmed booking",
+				"""
+				<p>We are pleased to confirm your booking for classroom %s at %s.</p>
+				"""
+				),
+		
+		BOOKING_CANCELLED(
+				"Booking cancelled successfully",
+				"Informing user {} of cancelled booking",
+				"""
+				<p>We are pleased to confirm that your booking for classroom %s at %s has been succesfully cancelled.</p>
+				"""
+				),
+		
+		WATCH_ALERT("A slot you were watching has opened up!",
+				"Informing user {} a slot he was watching has opened up",
+				"""
+				<p>A booking for classroom %s at %s has been cancelled. Hurry up and book it before someone else does!.</p>
+				"""
+				)		
+		;
 
 		private final String subject;
 		private final String logText;
