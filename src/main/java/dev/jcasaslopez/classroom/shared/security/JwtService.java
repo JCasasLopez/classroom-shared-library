@@ -2,6 +2,7 @@ package dev.jcasaslopez.classroom.shared.security;
 
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 
 import javax.crypto.SecretKey;
 
@@ -23,35 +24,33 @@ public final class JwtService {
 
 	// validateJwt() is overloaded: HEADER, KEY and TOKEN TYPE are always necessary, 
 	// whereas USER ROLES are only to access Classroom micro-service (only admins are allowed).
-	public boolean validateJwt (String header, String base64SecretKey, TokenType tokenTypeValid){
+	public Optional<String> validateJwt (String header, String base64SecretKey, TokenType tokenTypeValid){
 		try {
 			SecretKey key = decodeBase64SecretKey(base64SecretKey);
 			String token = extractJwt(header);
 			Claims claims = parseJwt(token, key);
-			String tokenTypeFoundInJwt = claims.get("purpose", String.class);
-			tokenTypeIsValid(tokenTypeValid, tokenTypeFoundInJwt);
+			tokenTypeIsValid(tokenTypeValid, claims.get("purpose", String.class));
 			logger.info("Token validated");
-			return true;
+			return Optional.of(claims.get("email", String.class));
 		} catch (FailedAuthenticationException ex) {
 			logger.warn("Validation failed: {}", ex.getMessage());
-			return false;
+			return Optional.empty();
 		}
 	}
 
-	public boolean validateJwt (String header, String base64SecretKey, TokenType tokenTypeValid, List<RoleName> validRoles) {
+	@SuppressWarnings("unchecked")
+	public Optional<String> validateJwt (String header, String base64SecretKey, TokenType tokenTypeValid, List<RoleName> validRoles) {
 		try {
 			SecretKey key = decodeBase64SecretKey(base64SecretKey);
 			String token = extractJwt(header);
 			Claims claims = parseJwt(token, key);
-			String tokenTypeFoundInJwt = claims.get("purpose", String.class);
-			tokenTypeIsValid(tokenTypeValid, tokenTypeFoundInJwt);
-			List<String> rolesFoundInJwt = claims.get("roles", List.class);
-			hasAnyValidRole(validRoles, rolesFoundInJwt);
+			tokenTypeIsValid(tokenTypeValid, claims.get("purpose", String.class));
+			hasAnyValidRole(validRoles, claims.get("roles", List.class));
 			logger.info("Token validated");
-			return true;
+			return Optional.of(claims.get("email", String.class));
 		} catch (FailedAuthenticationException ex) {
 			logger.warn("Validation failed: {}", ex.getMessage());
-			return false;
+			return Optional.empty();
 		}
 	}
 
@@ -98,10 +97,8 @@ public final class JwtService {
 	private void hasAnyValidRole(List<RoleName> validRoles, List<String> rolesFoundInJwt) {
 		boolean hasValidRole = validRoles.stream()
 				.anyMatch(role -> rolesFoundInJwt.contains(role.name()));
-
-		if (hasValidRole) {
-			return;
-		} else {
-	        throw new FailedAuthenticationException(String.format("Access denied. User roles %s do not match any allowed roles: %s", rolesFoundInJwt, validRoles));		}
+		if (!hasValidRole) {
+	        throw new FailedAuthenticationException(String.format("Access denied. User roles %s do not match any allowed roles: %s", rolesFoundInJwt, validRoles));	
+		} 
 	}
 }
