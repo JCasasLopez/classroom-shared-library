@@ -22,15 +22,17 @@ public final class JwtService {
 	
 	private static final Logger logger = LoggerFactory.getLogger(JwtService.class);
 
-	// validateJwt() is overloaded: HEADER, KEY and TOKEN TYPE are always necessary, 
-	// whereas USER ROLES are only to access Classroom micro-service (only admins are allowed).
+	// validateJwt() is overloaded: HEADER, KEY and TOKEN TYPE are always necessary, whereas USER ROLES 
+	// are only to access Classroom micro-service (only admins are allowed), hence the overloaded validateJwt().
+	
+	// It returns an Optional with the user's email if the authentication has been successful or an empty one if it has not.
 	public Optional<String> validateJwt (String header, String base64SecretKey, TokenType tokenTypeValid){
 		try {
 			SecretKey key = decodeBase64SecretKey(base64SecretKey);
 			String token = extractJwt(header);
 			Claims claims = parseJwt(token, key);
 			tokenTypeIsValid(tokenTypeValid, claims.get("purpose", String.class));
-			logger.info("Token validated");
+			logger.info("Token validated for user: {}", claims.get("email", String.class));
 			return Optional.of(claims.get("email", String.class));
 		} catch (FailedAuthenticationException ex) {
 			logger.warn("Validation failed: {}", ex.getMessage());
@@ -38,6 +40,7 @@ public final class JwtService {
 		}
 	}
 
+	// It returns an Optional with the user's email if the authentication has been successful or an empty one if it has not.
 	@SuppressWarnings("unchecked")
 	public Optional<String> validateJwt (String header, String base64SecretKey, TokenType tokenTypeValid, List<RoleName> validRoles) {
 		try {
@@ -52,6 +55,18 @@ public final class JwtService {
 			logger.warn("Validation failed: {}", ex.getMessage());
 			return Optional.empty();
 		}
+	}
+	
+	public Integer extractIdUser(String header, String base64SecretKey) {
+	    try {
+	        SecretKey key = decodeBase64SecretKey(base64SecretKey);
+	        String token = extractJwt(header);
+	        Claims claims = parseJwt(token, key);
+	    	return claims.get("idUser", Integer.class);
+	    } catch (FailedAuthenticationException ex) {
+	        logger.warn("Failed to extract idUser from token: {}", ex.getMessage());
+	        return null;
+	    }
 	}
 
 	private SecretKey decodeBase64SecretKey(String base64SecretKey) {
@@ -87,7 +102,7 @@ public final class JwtService {
 			throw new FailedAuthenticationException("Expired or malformed token");
 		}
 	}
-
+	
 	private void tokenTypeIsValid(TokenType tokenTypeValid, String tokenTypeFoundInJwt) {
 		if(!tokenTypeValid.prefix().equals(tokenTypeFoundInJwt)) {
 			throw new FailedAuthenticationException (String.format("Invalid token type. Expected: %s, Found: %s", tokenTypeValid.prefix(), tokenTypeFoundInJwt));
