@@ -1,4 +1,4 @@
-package dev.jcasaslopez.classroom.shared.security;
+package dev.jcasaslopez.classroom.shared.filter;
 
 import java.util.Optional;
 
@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import dev.jcasaslopez.classroom.shared.domain.UserInfo;
+import dev.jcasaslopez.classroom.shared.security.JwtService;
 import dev.jcasaslopez.classroom.shared.utility.UserContext;
 import java.io.IOException;
 import jakarta.servlet.FilterChain;
@@ -28,7 +29,7 @@ public abstract class AuthenticationFilterBase extends OncePerRequestFilter {
 	protected abstract Optional<UserInfo> validateToken(String authHeader);
 
 	@Override
-	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+	public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 
 		logger.debug("Entering AuthenticationFilter...");
