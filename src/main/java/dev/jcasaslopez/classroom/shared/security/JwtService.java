@@ -100,9 +100,9 @@ public final class JwtService {
 	}
 
 	private void tokenTypeIsValid(TokenType tokenTypeValid, String tokenTypeFoundInJwt) {
-		if(!tokenTypeValid.prefix().equals(tokenTypeFoundInJwt)) {
-			throw new FailedAuthenticationException (String.format("Invalid token type. Expected: %s, Found: %s", tokenTypeValid.prefix(), tokenTypeFoundInJwt));
-		}
+	    if (tokenTypeFoundInJwt == null || !tokenTypeValid.name().equalsIgnoreCase(tokenTypeFoundInJwt)) {
+	        throw new FailedAuthenticationException(String.format("Invalid token type. Expected: %s, Found: %s", tokenTypeValid.name(), tokenTypeFoundInJwt));
+	    }
 	}
 
 	private void hasAnyValidRole(List<RoleName> validRoles, List<String> rolesFoundInJwt) {
