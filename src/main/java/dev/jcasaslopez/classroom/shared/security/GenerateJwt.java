@@ -26,12 +26,11 @@ public class GenerateJwt {
     private long expirationTimeMs = 3_600_000; 
     private final SecretKey key;
 
-    public GenerateJwt() {
-        this.key = createSecretKey();
+    public GenerateJwt(String base64SecretKey) {
+        this.key = createSecretKey(base64SecretKey);
     }
 
-    private SecretKey createSecretKey() {
-        String base64SecretKey = "MTIzNDU2Nzg5MEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaMDEyMzQ1Njc4OTA=";
+    private SecretKey createSecretKey(String base64SecretKey) {
         byte[] keyBytes = Base64.getDecoder().decode(base64SecretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
