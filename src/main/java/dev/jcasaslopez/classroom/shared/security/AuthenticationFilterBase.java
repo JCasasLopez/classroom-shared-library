@@ -4,7 +4,6 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import dev.jcasaslopez.classroom.shared.domain.UserInfo;
@@ -21,7 +20,7 @@ public abstract class AuthenticationFilterBase extends OncePerRequestFilter {
 	protected final JwtService jwtService;
 	protected final String base64SecretKey;
 
-	public AuthenticationFilterBase(JwtService jwtService, @Value("${jwt.secretKey}") String base64SecretKey) {
+	public AuthenticationFilterBase(JwtService jwtService, String base64SecretKey) {
 		this.jwtService = jwtService;
 		this.base64SecretKey = base64SecretKey;
 	}
@@ -43,11 +42,11 @@ public abstract class AuthenticationFilterBase extends OncePerRequestFilter {
 				response.sendError(401, "Authentication failed");
 				return; 
 			}    
-			// We need access to user's email address to send notifications.
-
-			String userEmail = validationResult.get().getEmail();
-			int idUser = validationResult.get().getIdUser();
-			UserContext.setContext(userEmail, idUser);   
+			
+			// The user info (email and id) will be needed further on, to send notifications, search booking 
+			// and watch alert history, etc, so it has to be kept at hand.
+			UserInfo userInfo = validationResult.get();
+			UserContext.setContext(userInfo.getEmail(), userInfo.getIdUser());   
 
 			filterChain.doFilter(request, response);
 
