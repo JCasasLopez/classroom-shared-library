@@ -1,15 +1,16 @@
 package dev.jcasaslopez.classroom.shared.filter;
 
-import java.util.Optional;
+import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import dev.jcasaslopez.classroom.shared.domain.AuthResponse;
 import dev.jcasaslopez.classroom.shared.domain.UserInfo;
+import dev.jcasaslopez.classroom.shared.enums.AuthStatus;
 import dev.jcasaslopez.classroom.shared.security.JwtService;
 import dev.jcasaslopez.classroom.shared.utility.UserContext;
-import java.io.IOException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,7 +27,7 @@ public abstract class AuthenticationFilterBase extends OncePerRequestFilter {
 		this.base64SecretKey = base64SecretKey;
 	}
 
-	protected abstract Optional<UserInfo> validateToken(String authHeader);
+	protected abstract AuthResponse validateToken(String authHeader);
 
 	@Override
 	public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -35,19 +36,26 @@ public abstract class AuthenticationFilterBase extends OncePerRequestFilter {
 		logger.debug("Entering AuthenticationFilter...");
 		String authHeader = request.getHeader("Authorization");
 
-		Optional<UserInfo> validationResult = validateToken(authHeader);
+		AuthResponse validationResult = validateToken(authHeader);
 		
 		try {
-			if (validationResult.isEmpty()) {
-				// The real message that Spring will return is simply "Unauthorized" (see AuthFilterIntegrationTest).
-				response.sendError(401, "Authentication failed");
-				return; 
-			}    
+			if (validationResult.authStatus() == AuthStatus.UNAUTHORIZED) {
+			    response.sendError(401, "Authentication failed");
+			    return;
+			} else if (validationResult.authStatus() == AuthStatus.FORBIDDEN) {
+			    response.sendError(403, "Forbidden");
+			    return;
+			} else if (validationResult.authStatus() != AuthStatus.AUTHENTICATED) {
+			    // Safety net in case AuthStatus gains new values in the future.
+			    logger.error("Unexpected AuthStatus: {}", validationResult.authStatus());
+			    response.sendError(500, "Internal error");
+			    return;
+			}
 			
 			// The user info (email and id) will be needed further on, to send notifications, search booking 
 			// and watch alert history, etc, so it has to be kept at hand.
-			UserInfo userInfo = validationResult.get();
-			UserContext.setContext(userInfo.getEmail(), userInfo.getIdUser());   
+			UserInfo userInfo = validationResult.userInfo();
+			UserContext.setContext(userInfo.email(), userInfo.idUser());   
 
 			filterChain.doFilter(request, response);
 

@@ -5,11 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
-import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,7 +17,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import dev.jcasaslopez.classroom.shared.domain.AuthResponse;
 import dev.jcasaslopez.classroom.shared.domain.UserInfo;
+import dev.jcasaslopez.classroom.shared.enums.AuthStatus;
 import dev.jcasaslopez.classroom.shared.security.JwtService;
 import dev.jcasaslopez.classroom.shared.utility.UserContext;
 import jakarta.servlet.FilterChain;
@@ -49,7 +51,7 @@ public class AuthBaseFilterUnitTest {
 		// Arrange
 		// Directly set the field instead of mocking JwtService: we are testing the base filter own logic, 
 		// not how tokens get validated.
-		filter.tokenValidationResult = Optional.empty();
+		filter.tokenValidationResult = new AuthResponse(AuthStatus.UNAUTHORIZED);
 
 		// Act
 		filter.doFilterInternal(request, response, filterChain);
@@ -58,11 +60,24 @@ public class AuthBaseFilterUnitTest {
 		verify(response).sendError(401, "Authentication failed");
 		verify(filterChain, never()).doFilter(any(), any());
 	}
+	
+	@Test
+	void auth_filter_returns_error_403_if_role_is_insufficient() throws ServletException, IOException {
+	    // Arrange
+	    filter.tokenValidationResult = new AuthResponse(AuthStatus.FORBIDDEN);
+
+	    // Act
+	    filter.doFilterInternal(request, response, filterChain);
+
+	    // Assert
+	    verify(response).sendError(403, "Forbidden");
+	    verify(filterChain, never()).doFilter(any(), any());
+	}
 
 	@Test
 	void auth_filter_continues_with_the_filter_chain_when_jwt_is_valid() throws ServletException, IOException {
 		// Arrange
-		filter.tokenValidationResult = Optional.of(new UserInfo(EMAIL, USER_ID));
+		filter.tokenValidationResult = new AuthResponse(AuthStatus.AUTHENTICATED, new UserInfo(EMAIL, USER_ID));
 
 		// Act
 		filter.doFilterInternal(request, response, filterChain);
@@ -74,7 +89,7 @@ public class AuthBaseFilterUnitTest {
 	@Test
 	void auth_filter_sets_user_info_correctly_in_ThreadLocal() throws IOException, ServletException {
 		// Arrange
-		filter.tokenValidationResult = Optional.of(new UserInfo(EMAIL, USER_ID));
+		filter.tokenValidationResult = new AuthResponse(AuthStatus.AUTHENTICATED, new UserInfo(EMAIL, USER_ID));
 
 		// UserContext gets cleared in the "finally" block right after filterChain.doFilter() runs, so by the time 
 		// doFilterInternal() returns, the values are already gone.
@@ -96,9 +111,9 @@ public class AuthBaseFilterUnitTest {
 	}
 
 	@Test
-	void auth_filter_clears_UserContext_whatever_happens() throws ServletException, IOException {
+	void auth_filter_clears_UserContext_after_successful_request() throws ServletException, IOException {
 		// Arrange
-		filter.tokenValidationResult = Optional.of(new UserInfo(EMAIL, USER_ID));
+		filter.tokenValidationResult = new AuthResponse(AuthStatus.AUTHENTICATED, new UserInfo(EMAIL, USER_ID));
 
 		// Act
 		filter.doFilterInternal(request, response, filterChain);
@@ -109,17 +124,30 @@ public class AuthBaseFilterUnitTest {
 				() -> assertThrows(IllegalStateException.class, () -> UserContext.getIdUser())
 				);
 	}
+	
+	@Test
+	void auth_filter_clears_UserContext_when_filterChain_throws() throws ServletException, IOException {
+	    filter.tokenValidationResult = new AuthResponse(AuthStatus.AUTHENTICATED, new UserInfo(EMAIL, USER_ID));
+	    doThrow(new RuntimeException("boom")).when(filterChain).doFilter(any(), any());
+
+	    assertThrows(RuntimeException.class, () -> filter.doFilterInternal(request, response, filterChain));
+
+	    assertAll("UserContext cleanup after exception",
+	            () -> assertThrows(IllegalStateException.class, () -> UserContext.getEmail()),
+	            () -> assertThrows(IllegalStateException.class, () -> UserContext.getIdUser())
+	            );
+	}
 
 	private static class TestAuthenticationFilter extends AuthenticationFilterBase {
 		
-		Optional<UserInfo> tokenValidationResult;
+		AuthResponse tokenValidationResult;
 
 		TestAuthenticationFilter(JwtService jwtService, String secretKey) {
 			super(jwtService, secretKey);
 		}
 
 		@Override
-		protected Optional<UserInfo> validateToken(String authHeader) {
+		protected AuthResponse validateToken(String authHeader) {
 			return tokenValidationResult;
 		}
 
@@ -128,5 +156,4 @@ public class AuthBaseFilterUnitTest {
 			return false;
 		}
 	}
-
 }
