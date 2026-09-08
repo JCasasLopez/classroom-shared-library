@@ -45,12 +45,7 @@ public abstract class AuthenticationFilterBase extends OncePerRequestFilter {
 			} else if (validationResult.authStatus() == AuthStatus.FORBIDDEN) {
 			    response.sendError(403, "Forbidden");
 			    return;
-			} else if (validationResult.authStatus() != AuthStatus.AUTHENTICATED) {
-			    // Safety net in case AuthStatus gains new values in the future.
-			    logger.error("Unexpected AuthStatus: {}", validationResult.authStatus());
-			    response.sendError(500, "Internal error");
-			    return;
-			}
+			} 
 			
 			// The user info (email and id) will be needed further on, to send notifications, search booking 
 			// and watch alert history, etc, so it has to be kept at hand.
