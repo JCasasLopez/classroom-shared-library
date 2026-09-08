@@ -47,7 +47,7 @@ To import this library into a consuming microservice, add the JitPack repository
 <dependency>
     <groupId>com.github.jcasaslopez</groupId>
     <artifactId>classroom-shared-library</artifactId>
-    <version>0.0.5</version>
+    <version>0.0.6</version>
 </dependency>
 ```
 
