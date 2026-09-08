@@ -3,14 +3,14 @@ package dev.jcasaslopez.classroom.shared.utility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import dev.jcasaslopez.classroom.shared.domain.UserInfo;
+
 
 public class UserContext {
 
 	private static final Logger logger = LoggerFactory.getLogger(UserContext.class);
 
-	private static final ThreadLocal<UserIdentity> userHolder = new ThreadLocal<>();
-
-	private record UserIdentity(String email, Integer idUser) {}
+	private static final ThreadLocal<UserInfo> userHolder = new ThreadLocal<>();
 
 	private UserContext() {
 
@@ -22,11 +22,11 @@ public class UserContext {
 		}
 		logger.debug("Setting UserContext for thread {}: email={}, idUser={}", 
 				Thread.currentThread().getName(), email, idUser);
-		userHolder.set(new UserIdentity(email, idUser));
+		userHolder.set(new UserInfo(email, idUser));
 	}
 
 	public static String getEmail() {
-		UserIdentity identity = userHolder.get();
+		UserInfo identity = userHolder.get();
 		if (identity == null) {
 			throw new IllegalStateException("No user context present in ThreadLocal for thread: " + Thread.currentThread().getName());
 		}
@@ -34,7 +34,7 @@ public class UserContext {
 	}
 
 	public static Integer getIdUser() {
-		UserIdentity identity = userHolder.get();
+		UserInfo identity = userHolder.get();
 		if (identity == null) {
 			throw new IllegalStateException("No user context present in ThreadLocal for thread: " + Thread.currentThread().getName());
 		}
