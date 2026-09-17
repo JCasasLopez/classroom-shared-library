@@ -4,12 +4,10 @@ public enum NotificationType {
 
 		// Enum fields represent:
 		// 1. Email subject line
-		// 2. Log message template
 		// 3. Core HTML message content (excluding greeting and farewell)
 
 		VERIFY_EMAIL(
 				"Email verification",
-				"Starting email verification flow for user %s",
 				"""
 				<p>Thank you for registering. To complete your account setup, 
 				please verify your email address by clicking on the following link:</p>
@@ -19,7 +17,6 @@ public enum NotificationType {
 
 		CREATE_ACCOUNT(
 				"Welcome to the platform!",
-				"Starting account creation flow for user %s",
 				"""
 				<p>Your account has been created successfully.</p>
 				"""
@@ -27,7 +24,6 @@ public enum NotificationType {
 
 		FORGOT_PASSWORD(
 				"Password reset verification email",
-				"Starting password reset flow for user %s",
 				"""
 				<p>Click on the following link to reset your password:</p>
 				<p><a href="%s/resetPassword?token=%s">Reset my password</a></p>
@@ -36,7 +32,6 @@ public enum NotificationType {
 
 		RESET_PASSWORD(
 				"Password reset successfully",
-				"Starting reset password flow for user %s",
 				"""
 				<p>Your password has been reset successfully.</p>
 				"""
@@ -44,7 +39,6 @@ public enum NotificationType {
 
 		CHANGE_PASSWORD(
 				"Password changed successfully",
-				"Starting change password flow for user %s",
 				"""
 				<p>Your password has been changed successfully.</p>
 				"""
@@ -52,7 +46,6 @@ public enum NotificationType {
 
 		UPDATE_ACCOUNT_STATUS(
 				"Change in account status",
-				"Informing user %s of change in account status",
 				// The message core is defined in NotificationService and its content depends on 
 				// the status the user account has changed to
 						"""
@@ -62,7 +55,6 @@ public enum NotificationType {
 		
 		BOOKING_CONFIRMED(
 				"Booking Confirmed",
-				"Informing user %s of confirmed booking",
 				"""
 				<p>We are pleased to confirm your booking for classroom %s on the %s from %s to %s.</p>
 				"""
@@ -70,7 +62,6 @@ public enum NotificationType {
 		
 		BOOKING_CANCELLED(
 				"Booking cancelled successfully",
-				"Informing user %s of cancelled booking",
 				"""
 				<p>We are pleased to confirm that your booking for classroom %s on the %s from %s to %s has been succesfully cancelled.</p>
 				"""
@@ -78,14 +69,13 @@ public enum NotificationType {
 		
 		WATCH_ALERT_CONFIRMED(
 				"Watch alert confirmed!",
-				"Informing user %s of confirmed watch alert",
 				"""
 				<p>We are pleased to confirm your watch alert for classroom %s on the %s from %s to %s. If the booking is cancelled you will be notified.</p>
 				"""
 				),
 		
-		WATCH_ALERT_TRIGGERED("A slot you were watching has opened up!",
-				"Informing user %s a slot he was watching has opened up",
+		WATCH_ALERT_TRIGGERED(
+				"A slot you were watching has opened up!",
 				"""
 				<p>A booking for classroom %s on the %s from %s to %s has been cancelled. Hurry up and book it before someone else does!.</p>
 				"""
@@ -93,21 +83,15 @@ public enum NotificationType {
 		;
 
 		private final String subject;
-		private final String logText;
 		private final String messageText;
 
-		private NotificationType(String subject, String logText, String messageText) {
+		private NotificationType(String subject, String messageText) {
 			this.subject = subject;
-			this.logText = logText;
 			this.messageText = messageText;
 		}
 
 		public String getSubject() {
 			return subject;
-		}
-
-		public String getLogText() {
-			return logText;
 		}
 
 		public String getMessageText() {
