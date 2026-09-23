@@ -1,9 +1,9 @@
-package dev.jcasaslopez.classroom.shared.utility;
+package dev.jcasaslopez.classroom.shared.context;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import dev.jcasaslopez.classroom.shared.domain.UserInfo;
+import dev.jcasaslopez.classroom.shared.dto.UserInfo;
 
 
 public class UserContext {

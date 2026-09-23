@@ -8,8 +8,8 @@ import javax.crypto.SecretKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import dev.jcasaslopez.classroom.shared.domain.AuthResponse;
-import dev.jcasaslopez.classroom.shared.domain.UserInfo;
+import dev.jcasaslopez.classroom.shared.dto.AuthResponse;
+import dev.jcasaslopez.classroom.shared.dto.UserInfo;
 import dev.jcasaslopez.classroom.shared.enums.AuthStatus;
 import dev.jcasaslopez.classroom.shared.enums.RoleName;
 import dev.jcasaslopez.classroom.shared.enums.TokenPurpose;

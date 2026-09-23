@@ -1,4 +1,4 @@
-package dev.jcasaslopez.classroom.shared.utility;
+package dev.jcasaslopez.classroom.shared.dto;
 
 import java.time.LocalDateTime;
 

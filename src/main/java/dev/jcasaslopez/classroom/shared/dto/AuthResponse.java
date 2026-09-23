@@ -1,4 +1,4 @@
-package dev.jcasaslopez.classroom.shared.domain;
+package dev.jcasaslopez.classroom.shared.dto;
 
 import dev.jcasaslopez.classroom.shared.enums.AuthStatus;
 

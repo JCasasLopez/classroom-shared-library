@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
-import dev.jcasaslopez.classroom.shared.utility.StandardResponse;
+import dev.jcasaslopez.classroom.shared.dto.StandardResponse;
 import jakarta.servlet.http.HttpServletResponse;
 
 // StandardResponseHandler converts a StandardResponse into a standard HTTP response.

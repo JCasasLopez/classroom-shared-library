@@ -14,7 +14,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import dev.jcasaslopez.classroom.shared.domain.AuthResponse;
+import dev.jcasaslopez.classroom.shared.dto.AuthResponse;
 import dev.jcasaslopez.classroom.shared.enums.AuthStatus;
 import dev.jcasaslopez.classroom.shared.enums.RoleName;
 import dev.jcasaslopez.classroom.shared.enums.TokenPurpose;
