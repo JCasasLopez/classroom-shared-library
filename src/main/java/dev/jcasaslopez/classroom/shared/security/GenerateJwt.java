@@ -9,7 +9,7 @@ import java.util.UUID;
 import javax.crypto.SecretKey;
 
 import dev.jcasaslopez.classroom.shared.enums.RoleName;
-import dev.jcasaslopez.classroom.shared.enums.TokenType;
+import dev.jcasaslopez.classroom.shared.enums.TokenPurpose;
 import io.jsonwebtoken.security.Keys;
 
 import io.jsonwebtoken.Jwts;
@@ -21,7 +21,7 @@ public class GenerateJwt {
     private final String idToken = UUID.randomUUID().toString();
     private List<String> roles = new ArrayList<>(List.of(String.valueOf(RoleName.ROLE_USER)));
     private int idUser = 1;
-    private String tokenPurpose = String.valueOf(TokenType.ACCESS);
+    private String tokenPurpose = String.valueOf(TokenPurpose.ACCESS);
     private String email = "user@example.com";
     private long expirationTimeMs = 3_600_000; 
     private final SecretKey key;
@@ -61,7 +61,7 @@ public class GenerateJwt {
         return this;
     }
 
-    public GenerateJwt withTokenPurpose(TokenType tokenPurpose) {
+    public GenerateJwt withTokenPurpose(TokenPurpose tokenPurpose) {
         this.tokenPurpose = String.valueOf(tokenPurpose);
         return this;
     }

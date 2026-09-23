@@ -1,13 +1,13 @@
 package dev.jcasaslopez.classroom.shared.enums;
 
-public enum TokenType {
+public enum TokenPurpose {
 	VERIFICATION("verification"),
 	ACCESS("access"),
 	REFRESH("refresh");
 
 	private final String prefix;
 
-	TokenType(String prefix) {
+	TokenPurpose(String prefix) {
 		this.prefix = prefix;
 	}
 

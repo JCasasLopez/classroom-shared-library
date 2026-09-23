@@ -12,7 +12,7 @@ import dev.jcasaslopez.classroom.shared.domain.AuthResponse;
 import dev.jcasaslopez.classroom.shared.domain.UserInfo;
 import dev.jcasaslopez.classroom.shared.enums.AuthStatus;
 import dev.jcasaslopez.classroom.shared.enums.RoleName;
-import dev.jcasaslopez.classroom.shared.enums.TokenType;
+import dev.jcasaslopez.classroom.shared.enums.TokenPurpose;
 import dev.jcasaslopez.classroom.shared.exception.UnauthorizedRoleException;
 import dev.jcasaslopez.classroom.shared.exception.InvalidTokenException;
 import io.jsonwebtoken.Claims;
@@ -28,9 +28,9 @@ public final class JwtService {
 	// validateJwt() is overloaded: HEADER, KEY and TOKEN TYPE are always necessary, whereas USER ROLES 
 	// are only to access Classroom micro-service (only admins are allowed), hence the overloaded validateJwt().
 
-	public AuthResponse validateJwt(String header, String base64SecretKey, TokenType tokenTypeValid) {
+	public AuthResponse validateJwt(String header, String base64SecretKey, TokenPurpose tokenPurposeValid) {
 		try {
-			Claims claims = parseAndValidateToken(header, base64SecretKey, tokenTypeValid);
+			Claims claims = parseAndValidateToken(header, base64SecretKey, tokenPurposeValid);
 			
 			logger.info("Token validated for user: {}", claims.get("email", String.class));
 			UserInfo userInfo = new UserInfo(claims.get("email", String.class), claims.get("idUser", Integer.class));
@@ -43,9 +43,9 @@ public final class JwtService {
 	}
 
 	@SuppressWarnings("unchecked")
-	public AuthResponse validateJwt(String header, String base64SecretKey, TokenType tokenTypeValid, List<RoleName> validRoles) {
+	public AuthResponse validateJwt(String header, String base64SecretKey, TokenPurpose tokenPurposeValid, List<RoleName> validRoles) {
 		try {
-			Claims claims = parseAndValidateToken(header, base64SecretKey, tokenTypeValid);
+			Claims claims = parseAndValidateToken(header, base64SecretKey, tokenPurposeValid);
 			
 			hasAnyValidRole(validRoles, claims.get("roles", List.class));
 			
@@ -63,11 +63,11 @@ public final class JwtService {
 		}
 	}
 
-	private Claims parseAndValidateToken(String header, String base64SecretKey, TokenType tokenTypeValid) {
+	private Claims parseAndValidateToken(String header, String base64SecretKey, TokenPurpose tokenPurposeValid) {
 		SecretKey key = decodeBase64SecretKey(base64SecretKey);
 		String token = extractJwt(header);
 		Claims claims = parseJwt(token, key);
-		tokenTypeIsValid(tokenTypeValid, claims.get("purpose", String.class));
+		tokenTypeIsValid(tokenPurposeValid, claims.get("purpose", String.class));
 		return claims;
 	}
 
@@ -105,9 +105,9 @@ public final class JwtService {
 		}
 	}
 
-	private void tokenTypeIsValid(TokenType tokenTypeValid, String tokenTypeFoundInJwt) {
-	    if (tokenTypeFoundInJwt == null || !tokenTypeValid.name().equalsIgnoreCase(tokenTypeFoundInJwt)) {
-	        throw new InvalidTokenException(String.format("Invalid token type. Expected: %s, Found: %s", tokenTypeValid.name(), tokenTypeFoundInJwt));
+	private void tokenTypeIsValid(TokenPurpose tokenPurposeValid, String tokenTypeFoundInJwt) {
+	    if (tokenTypeFoundInJwt == null || !tokenPurposeValid.name().equalsIgnoreCase(tokenTypeFoundInJwt)) {
+	        throw new InvalidTokenException(String.format("Invalid token type. Expected: %s, Found: %s", tokenPurposeValid.name(), tokenTypeFoundInJwt));
 	    }
 	}
 
