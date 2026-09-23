@@ -4,11 +4,13 @@ import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import dev.jcasaslopez.classroom.shared.domain.AuthResponse;
 import dev.jcasaslopez.classroom.shared.domain.UserInfo;
 import dev.jcasaslopez.classroom.shared.enums.AuthStatus;
+import dev.jcasaslopez.classroom.shared.handler.StandardResponseHandler;
 import dev.jcasaslopez.classroom.shared.security.JwtService;
 import dev.jcasaslopez.classroom.shared.utility.UserContext;
 import jakarta.servlet.FilterChain;
@@ -21,10 +23,13 @@ public abstract class AuthenticationFilterBase extends OncePerRequestFilter {
 	private static final Logger logger = LoggerFactory.getLogger(AuthenticationFilterBase.class);
 	protected final JwtService jwtService;
 	protected final String base64SecretKey;
+	protected final StandardResponseHandler standardResponseHandler;
 
-	public AuthenticationFilterBase(JwtService jwtService, String base64SecretKey) {
+	public AuthenticationFilterBase(JwtService jwtService, String base64SecretKey,
+			StandardResponseHandler standardResponseHandler) {
 		this.jwtService = jwtService;
 		this.base64SecretKey = base64SecretKey;
+		this.standardResponseHandler = standardResponseHandler;
 	}
 
 	protected abstract AuthResponse validateToken(String authHeader);
@@ -37,28 +42,44 @@ public abstract class AuthenticationFilterBase extends OncePerRequestFilter {
 		String authHeader = request.getHeader("Authorization");
 
 		AuthResponse validationResult = validateToken(authHeader);
-		
-		try {
-			if (validationResult.authStatus() == AuthStatus.UNAUTHORIZED) {
-			    response.sendError(401, "Authentication failed");
-			    return;
-			} else if (validationResult.authStatus() == AuthStatus.TOKEN_EXPIRED) {
-			    response.sendError(401, "Expired token");
-			    return;
-			} else if (validationResult.authStatus() == AuthStatus.FORBIDDEN) {
-			    response.sendError(403, "Forbidden");
-			    return;
-			}
+
+		if (validationResult.authStatus() == AuthStatus.UNAUTHORIZED) {
+			standardResponseHandler.handleResponse(
+					response, 
+					HttpStatus.UNAUTHORIZED, 
+					"Authentication failed", 
+					AuthStatus.UNAUTHORIZED
+					);
+			return;		
 			
-			// The user info (email and id) will be needed further on, to send notifications, search booking 
-			// and watch alert history, etc, so it has to be kept at hand.
-			UserInfo userInfo = validationResult.userInfo();
-			UserContext.setContext(userInfo.email(), userInfo.idUser());   
+		} else if (validationResult.authStatus() == AuthStatus.TOKEN_EXPIRED) {
+			standardResponseHandler.handleResponse(
+					response, 
+					HttpStatus.UNAUTHORIZED, 
+					"Token has expired", 
+					AuthStatus.TOKEN_EXPIRED
+					);
+			return;	
+			
+		} else if (validationResult.authStatus() == AuthStatus.FORBIDDEN) {
+			standardResponseHandler.handleResponse(
+					response, 
+					HttpStatus.FORBIDDEN, 
+					"Forbidden", 
+					AuthStatus.FORBIDDEN
+					);
+			return;	
+		}
 
+		// The user info (email and id) will be needed further on, to send notifications, search booking 
+		// and watch alert history, etc, so it has to be kept at hand.
+		UserInfo userInfo = validationResult.userInfo();
+		UserContext.setContext(userInfo.email(), userInfo.idUser());
+
+		try {
 			filterChain.doFilter(request, response);
-
 		} finally {
-			UserContext.clear(); 
+			UserContext.clear();
 		}
 	}
 }
