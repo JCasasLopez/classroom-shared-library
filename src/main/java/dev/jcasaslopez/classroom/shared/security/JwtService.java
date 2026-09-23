@@ -39,6 +39,9 @@ public final class JwtService {
 		} catch (InvalidTokenException ex) {
 			logger.warn("Validation failed: {}", ex.getMessage());
 			return new AuthResponse(AuthStatus.UNAUTHORIZED);
+		} catch (ExpiredJwtException ex) {
+			logger.warn("Token expired: {}", ex.getMessage());
+			return new AuthResponse(AuthStatus.TOKEN_EXPIRED);
 		}
 	}
 
@@ -60,6 +63,10 @@ public final class JwtService {
 		} catch (UnauthorizedRoleException ex) {
 			logger.warn("Access denied: {}", ex.getMessage());
 			return new AuthResponse(AuthStatus.FORBIDDEN);
+			
+		} catch (ExpiredJwtException ex) {
+			logger.warn("Token expired: {}", ex.getMessage());
+			return new AuthResponse(AuthStatus.TOKEN_EXPIRED);
 		}
 	}
 
@@ -100,9 +107,16 @@ public final class JwtService {
 					.parseSignedClaims(token)
 					.getPayload();
 			return claims;
-		} catch (ExpiredJwtException | MalformedJwtException | io.jsonwebtoken.security.SecurityException ex) {
-			throw new InvalidTokenException("Expired or malformed token");
-		}
+			
+		} catch (ExpiredJwtException ex) {
+	        throw ex; 
+	        
+	    } catch (MalformedJwtException | io.jsonwebtoken.security.SecurityException ex) {
+	        throw new InvalidTokenException("Malformed or invalid signature token");
+	        
+	    } catch (Exception ex) { 
+	        throw new InvalidTokenException("Invalid token format or claims");
+	    }
 	}
 
 	private void tokenTypeIsValid(TokenPurpose tokenPurposeValid, String tokenTypeFoundInJwt) {

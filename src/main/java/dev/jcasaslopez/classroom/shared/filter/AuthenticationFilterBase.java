@@ -42,10 +42,13 @@ public abstract class AuthenticationFilterBase extends OncePerRequestFilter {
 			if (validationResult.authStatus() == AuthStatus.UNAUTHORIZED) {
 			    response.sendError(401, "Authentication failed");
 			    return;
+			} else if (validationResult.authStatus() == AuthStatus.TOKEN_EXPIRED) {
+			    response.sendError(401, "Expired token");
+			    return;
 			} else if (validationResult.authStatus() == AuthStatus.FORBIDDEN) {
 			    response.sendError(403, "Forbidden");
 			    return;
-			} 
+			}
 			
 			// The user info (email and id) will be needed further on, to send notifications, search booking 
 			// and watch alert history, etc, so it has to be kept at hand.
