@@ -8,6 +8,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.io.IOException;
 
@@ -16,11 +17,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 
 import dev.jcasaslopez.classroom.shared.context.UserContext;
 import dev.jcasaslopez.classroom.shared.dto.AuthResponse;
 import dev.jcasaslopez.classroom.shared.dto.UserInfo;
 import dev.jcasaslopez.classroom.shared.enums.AuthStatus;
+import dev.jcasaslopez.classroom.shared.handler.StandardResponseHandler;
 import dev.jcasaslopez.classroom.shared.security.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -34,6 +37,7 @@ public class AuthBaseFilterUnitTest {
 	@Mock FilterChain filterChain;
 	@Mock HttpServletRequest request;
 	@Mock HttpServletResponse response;
+	@Mock StandardResponseHandler standardResponseHandler;
 
 	private static final String EMAIL = "user@example.com";
 	private static final Integer USER_ID = 1;
@@ -43,7 +47,7 @@ public class AuthBaseFilterUnitTest {
 
 	@BeforeEach
 	void setUp() {
-        filter = new TestAuthenticationFilter(jwtService, secretKey);
+        filter = new TestAuthenticationFilter(jwtService, secretKey, standardResponseHandler);
 	}
 
 	@Test
@@ -57,7 +61,12 @@ public class AuthBaseFilterUnitTest {
 		filter.doFilterInternal(request, response, filterChain);
 
 		// Assert
-		verify(response).sendError(401, "Authentication failed");
+		verify(standardResponseHandler).handleResponse(
+				response, 
+				HttpStatus.UNAUTHORIZED, 
+				"Authentication failed", 
+				AuthStatus.UNAUTHORIZED
+		);
 		verify(filterChain, never()).doFilter(any(), any());
 	}
 	
@@ -70,7 +79,12 @@ public class AuthBaseFilterUnitTest {
 		filter.doFilterInternal(request, response, filterChain);
 
 		// Assert
-		verify(response).sendError(401, "Authentication failed");
+		verify(standardResponseHandler).handleResponse(
+				response, 
+				HttpStatus.UNAUTHORIZED, 
+				"Authentication failed", 
+				AuthStatus.TOKEN_EXPIRED
+		);
 		verify(filterChain, never()).doFilter(any(), any());
 	}
 	
@@ -83,7 +97,12 @@ public class AuthBaseFilterUnitTest {
 	    filter.doFilterInternal(request, response, filterChain);
 
 	    // Assert
-	    verify(response).sendError(403, "Forbidden");
+	    verify(standardResponseHandler).handleResponse(
+				response, 
+				HttpStatus.FORBIDDEN, 
+				"Access denied", 
+				AuthStatus.FORBIDDEN
+		);
 	    verify(filterChain, never()).doFilter(any(), any());
 	}
 
@@ -97,6 +116,7 @@ public class AuthBaseFilterUnitTest {
 
 		// Assert
 		verify(filterChain).doFilter(request, response);
+		verifyNoInteractions(standardResponseHandler);
 	}
 
 	@Test
@@ -155,8 +175,8 @@ public class AuthBaseFilterUnitTest {
 		
 		AuthResponse tokenValidationResult;
 
-		TestAuthenticationFilter(JwtService jwtService, String secretKey) {
-			super(jwtService, secretKey);
+		TestAuthenticationFilter(JwtService jwtService, String secretKey, StandardResponseHandler standardResponseHandler) {
+			super(jwtService, secretKey, standardResponseHandler);
 		}
 
 		@Override

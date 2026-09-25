@@ -25,7 +25,7 @@ public class JwtServiceUnitTest {
 	
 	private static final String VALID_SECRET_KEY = "MTIzNDU2Nzg5MEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaMDEyMzQ1Njc4OTA=";
 	private static final String VALID_TOKEN = new GenerateJwt(VALID_SECRET_KEY).build();
-	private static final String SUPER_SHORT_TOKEN = new GenerateJwt(VALID_SECRET_KEY).withExpirationInMs(1).build();
+	private static final String EXPIRED_TOKEN = new GenerateJwt(VALID_SECRET_KEY).withExpirationInMs(1).build();
 	private static final String MALFORMED_TOKEN = "Malformed token";
 	private static final String VALID_TOKEN_WITH_ADMIN_ROLE = new GenerateJwt(VALID_SECRET_KEY).withRoleAdmin().build();
 	
@@ -77,6 +77,21 @@ public class JwtServiceUnitTest {
 				() -> assertNull(authResponse.userInfo())
 				);		
 	}
+	
+	@Test
+	void when_token_is_expired_JwtService_returns_TOKEN_EXPIRED() {
+		// Arrange
+
+		// Act
+		// Expired token (token life of only 1ms)
+		AuthResponse authResponse = jwtService.validateJwt(addBearer(EXPIRED_TOKEN), VALID_SECRET_KEY, TokenPurpose.ACCESS);
+
+		// Assert
+		assertAll(
+				() -> assertEquals(AuthStatus.TOKEN_EXPIRED, authResponse.authStatus()),
+				() -> assertNull(authResponse.userInfo())
+				);		
+	}
 
 	@ParameterizedTest
 	@MethodSource("jwtValidateUnauthorizedData")
@@ -100,9 +115,6 @@ public class JwtServiceUnitTest {
 
 				// Header misses "Bearer..."
 				Arguments.of(VALID_TOKEN, VALID_SECRET_KEY, TokenPurpose.ACCESS),
-
-				// Expired token (token life of only 1ms)
-				Arguments.of(addBearer(SUPER_SHORT_TOKEN), VALID_SECRET_KEY, TokenPurpose.ACCESS),
 
 				// Malformed token
 				Arguments.of(addBearer(MALFORMED_TOKEN), VALID_SECRET_KEY, TokenPurpose.ACCESS),
