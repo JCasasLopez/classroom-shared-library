@@ -62,6 +62,19 @@ public class AuthBaseFilterUnitTest {
 	}
 	
 	@Test
+	void auth_filter_returns_error_401_if_jwt_is_expired() throws ServletException, IOException {
+		// Arrange
+		filter.tokenValidationResult = new AuthResponse(AuthStatus.TOKEN_EXPIRED);
+
+		// Act
+		filter.doFilterInternal(request, response, filterChain);
+
+		// Assert
+		verify(response).sendError(401, "Authentication failed");
+		verify(filterChain, never()).doFilter(any(), any());
+	}
+	
+	@Test
 	void auth_filter_returns_error_403_if_role_is_insufficient() throws ServletException, IOException {
 	    // Arrange
 	    filter.tokenValidationResult = new AuthResponse(AuthStatus.FORBIDDEN);

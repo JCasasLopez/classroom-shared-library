@@ -7,12 +7,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import dev.jcasaslopez.classroom.shared.domain.UserInfo;
+import dev.jcasaslopez.classroom.shared.context.UserContext;
 import dev.jcasaslopez.classroom.shared.dto.AuthResponse;
+import dev.jcasaslopez.classroom.shared.dto.UserInfo;
 import dev.jcasaslopez.classroom.shared.enums.AuthStatus;
 import dev.jcasaslopez.classroom.shared.handler.StandardResponseHandler;
 import dev.jcasaslopez.classroom.shared.security.JwtService;
-import dev.jcasaslopez.classroom.shared.utility.UserContext;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -56,7 +56,7 @@ public abstract class AuthenticationFilterBase extends OncePerRequestFilter {
 			standardResponseHandler.handleResponse(
 					response, 
 					HttpStatus.UNAUTHORIZED, 
-					"Token has expired", 
+					"Authentication failed", 
 					AuthStatus.TOKEN_EXPIRED
 					);
 			return;	
@@ -65,7 +65,7 @@ public abstract class AuthenticationFilterBase extends OncePerRequestFilter {
 			standardResponseHandler.handleResponse(
 					response, 
 					HttpStatus.FORBIDDEN, 
-					"Forbidden", 
+					"Access denied", 
 					AuthStatus.FORBIDDEN
 					);
 			return;	
