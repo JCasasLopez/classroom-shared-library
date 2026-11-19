@@ -1,0 +1,12 @@
+# Evitar archivos compilados
+/target/
+*.class
+
+# Evitar configuración local de Eclipse
+.settings/
+.classpath
+.project
+
+# Archivos temporales de sistema
+.DS_Store
+Thumbs.db
