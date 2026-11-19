@@ -120,7 +120,7 @@ public class JwtServiceUnitTest {
 				Arguments.of(addBearer(MALFORMED_TOKEN), VALID_SECRET_KEY, TokenPurpose.ACCESS),
 
 				// Incorrect token type, token is formed by default with TokenType.ACCESS (see JwtService)
-				Arguments.of(addBearer(VALID_TOKEN), VALID_SECRET_KEY, TokenPurpose.VERIFICATION)
+				Arguments.of(addBearer(VALID_TOKEN), VALID_SECRET_KEY, TokenPurpose.ACCOUNT_CONFIRMATION)
 				);
 
 	}
