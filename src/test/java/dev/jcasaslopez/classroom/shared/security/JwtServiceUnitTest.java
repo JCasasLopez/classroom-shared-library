@@ -17,7 +17,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import dev.jcasaslopez.classroom.shared.dto.AuthResponse;
 import dev.jcasaslopez.classroom.shared.enums.AuthStatus;
 import dev.jcasaslopez.classroom.shared.enums.RoleName;
-import dev.jcasaslopez.classroom.shared.enums.TokenPurpose;
 
 public class JwtServiceUnitTest {
 	
@@ -39,7 +38,7 @@ public class JwtServiceUnitTest {
 		// Arrange
 
 		// Act
-		AuthResponse authResponse = jwtService.validateJwt(addBearer(VALID_TOKEN), VALID_SECRET_KEY, TokenPurpose.ACCESS);
+		AuthResponse authResponse = jwtService.validateJwt(addBearer(VALID_TOKEN), VALID_SECRET_KEY);
 		
 		// Assert
 		assertAll(
@@ -54,7 +53,7 @@ public class JwtServiceUnitTest {
 
 		// Act
 		AuthResponse authResponse = jwtService.validateJwt(addBearer(VALID_TOKEN_WITH_ADMIN_ROLE), VALID_SECRET_KEY, 
-				TokenPurpose.ACCESS, List.of(RoleName.ROLE_USER, RoleName.ROLE_ADMIN));
+				List.of(RoleName.ROLE_USER, RoleName.ROLE_ADMIN));
 
 		// Assert
 		assertAll(
@@ -68,8 +67,7 @@ public class JwtServiceUnitTest {
 		// Arrange
 
 		// Act
-		AuthResponse authResponse = jwtService.validateJwt(addBearer(VALID_TOKEN), VALID_SECRET_KEY, TokenPurpose.ACCESS,
-				List.of(RoleName.ROLE_ADMIN));
+		AuthResponse authResponse = jwtService.validateJwt(addBearer(VALID_TOKEN), VALID_SECRET_KEY, List.of(RoleName.ROLE_ADMIN));
 
 		// Assert
 		assertAll(
@@ -84,7 +82,7 @@ public class JwtServiceUnitTest {
 
 		// Act
 		// Expired token (token life of only 1ms)
-		AuthResponse authResponse = jwtService.validateJwt(addBearer(EXPIRED_TOKEN), VALID_SECRET_KEY, TokenPurpose.ACCESS);
+		AuthResponse authResponse = jwtService.validateJwt(addBearer(EXPIRED_TOKEN), VALID_SECRET_KEY);
 
 		// Assert
 		assertAll(
@@ -95,11 +93,11 @@ public class JwtServiceUnitTest {
 
 	@ParameterizedTest
 	@MethodSource("jwtValidateUnauthorizedData")
-	void when_token_invalid_JwtService_returns_UNAUTHORIZED(String Bearer, String secretKey, TokenPurpose tokenType) {
+	void when_token_invalid_JwtService_returns_UNAUTHORIZED(String Bearer, String secretKey) {
 		// Arrange
 		
 		// Act
-		AuthResponse authResponse = jwtService.validateJwt(Bearer, secretKey, tokenType);
+		AuthResponse authResponse = jwtService.validateJwt(Bearer, secretKey);
 		
 		// Assert
 		assertAll(
@@ -111,16 +109,14 @@ public class JwtServiceUnitTest {
 	private static Stream<Arguments> jwtValidateUnauthorizedData() {
 		return Stream.of(
 				// Header is null
-				Arguments.of(null, VALID_SECRET_KEY, TokenPurpose.ACCESS),
+				Arguments.of(null, VALID_SECRET_KEY),
 
 				// Header misses "Bearer..."
-				Arguments.of(VALID_TOKEN, VALID_SECRET_KEY, TokenPurpose.ACCESS),
+				Arguments.of(VALID_TOKEN, VALID_SECRET_KEY),
 
 				// Malformed token
-				Arguments.of(addBearer(MALFORMED_TOKEN), VALID_SECRET_KEY, TokenPurpose.ACCESS),
+				Arguments.of(addBearer(MALFORMED_TOKEN), VALID_SECRET_KEY)
 
-				// Incorrect token type, token is formed by default with TokenType.ACCESS (see JwtService)
-				Arguments.of(addBearer(VALID_TOKEN), VALID_SECRET_KEY, TokenPurpose.ACCOUNT_CONFIRMATION)
 				);
 
 	}

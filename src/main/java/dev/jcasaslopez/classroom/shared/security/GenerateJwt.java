@@ -1,29 +1,24 @@
 package dev.jcasaslopez.classroom.shared.security;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
 import dev.jcasaslopez.classroom.shared.enums.RoleName;
 import dev.jcasaslopez.classroom.shared.enums.TokenPurpose;
-import io.jsonwebtoken.security.Keys;
-
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 
 public class GenerateJwt {
 	
-    private String tokenType = "JWT";
-    private String username = "Username";
-    private final String idToken = UUID.randomUUID().toString();
     private List<String> roles = new ArrayList<>(List.of(String.valueOf(RoleName.ROLE_USER)));
     private int idUser = 1;
-    private String tokenPurpose = String.valueOf(TokenPurpose.ACCESS);
     private String email = "user@example.com";
-    private long expirationTimeMs = 3_600_000; 
+    private long expirationTimeMs = TokenPurpose.ACCESS.timeToLive().toMillis();
     private final SecretKey key;
 
     public GenerateJwt(String base64SecretKey) {
@@ -33,17 +28,6 @@ public class GenerateJwt {
     private SecretKey createSecretKey(String base64SecretKey) {
         byte[] keyBytes = Base64.getDecoder().decode(base64SecretKey);
         return Keys.hmacShaKeyFor(keyBytes);
-    }
-
-
-    public GenerateJwt withTokenType(String tokenType) {
-        this.tokenType = tokenType;
-        return this;
-    }
-
-    public GenerateJwt withUsername(String username) {
-        this.username = username;
-        return this;
     }
 
     public GenerateJwt withRoleAdmin() {
@@ -61,11 +45,6 @@ public class GenerateJwt {
         return this;
     }
 
-    public GenerateJwt withTokenPurpose(TokenPurpose tokenPurpose) {
-        this.tokenPurpose = String.valueOf(tokenPurpose);
-        return this;
-    }
-
     public GenerateJwt withEmail(String email) {
         this.email = email;
         return this;
@@ -77,20 +56,14 @@ public class GenerateJwt {
     }
 
     public String build() {
-        long now = System.currentTimeMillis();
-        Date issuedAt = new Date(now);
-        Date expiration = new Date(now + expirationTimeMs);
+        Instant now = Instant.now();
 
         return Jwts.builder()
-                .header().type(tokenType).and()
-                .subject(username)
-                .id(idToken)
+                .subject(String.valueOf(idUser))
                 .claim("roles", roles)
-                .claim("idUser", idUser)
-                .claim("purpose", tokenPurpose)
                 .claim("email", email)
-                .issuedAt(issuedAt)
-                .expiration(expiration)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(now.plusMillis(expirationTimeMs)))
                 .signWith(key, Jwts.SIG.HS256)
                 .compact();
     }
